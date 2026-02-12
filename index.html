@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sumatif Harian - SMA Islam Darussalam</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background-color: #f0f2f5; 
+            margin: 0; 
+            padding: 20px; 
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .container { max-width: 850px; margin: auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); position: relative; z-index: 10; }
+        .kop-surat { text-align: center; border-bottom: 3px double #000; margin-bottom: 20px; padding-bottom: 10px; }
+        .kop-surat h2 { margin: 5px 0; color: #1a5d1a; }
+        .basmalah { text-align: center; font-size: 24px; margin: 20px 0; font-family: "Times New Roman", serif; }
+        #start-page { text-align: center; padding: 20px; }
+        .input-group { margin-bottom: 15px; text-align: left; max-width: 400px; margin-left: auto; margin-right: auto; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
+        
+        #exam-page { display: none; }
+        .identitas-header { display: flex; justify-content: space-between; background: #e8f5e9; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
+        .timer { color: #d9534f; font-size: 20px; }
+        
+        .question { margin-bottom: 30px; padding: 20px; border: 1px solid #e1e4e8; border-radius: 8px; transition: all 0.3s; }
+        .question p { font-size: 17px; line-height: 1.6; margin-top: 0; text-align: justify; }
+        
+        .invalid-question { background-color: #fff5f5 !important; border: 2px solid #feb2b2 !important; }
+        
+        .upload-section { margin-top: 15px; padding: 15px; background: #f8f9fa; border: 1px dashed #adb5bd; border-radius: 6px; }
+        .btn-utama { background: #1a5d1a; color: white; border: none; padding: 15px; width: 100%; border-radius: 6px; cursor: pointer; font-size: 18px; font-weight: bold; margin-top: 10px; }
+        .btn-utama:hover { background: #144614; }
+        .btn-utama:disabled { background: #6c757d; }
+        
+        #result-area { display: none; text-align: center; }
+        .warning-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin: 20px auto; max-width: 400px; text-align: left; color: #856404; font-size: 14px; }
+        
+        .blue-box { background-color: #ebf8ff; border: 1px solid #bee3f8; color: #2b6cb0; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        
+        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 10000; text-align: center; padding-top: 20%; }
+        .spinner { border: 8px solid #f3f3f3; border-top: 8px solid #1a5d1a; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        canvas { background: #fff; border: 1px solid #ddd; max-width: 100%; height: auto; }
+
+        #watermark {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999; opacity: 0.07;
+            display: none; flex-wrap: wrap; justify-content: space-around;
+            align-content: space-around; font-size: 18px; transform: rotate(-20deg);
+        }
+        #watermark span { margin: 40px; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<div id="watermark"></div>
+
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <div id="loading-text" style="font-size: 20px; font-weight: bold; color: #1a5d1a;">Sedang Mengirim Jawaban...</div>
+</div>
+
+<div class="container">
+    <div class="kop-surat">
+        <h2>SUMATIF HARIAN</h2>
+        <p><b>PERSAMAAN DAN PERTIDAKSAMAAN LINEAR</b></p>
+        <p>SMA ISLAM DARUSSALAM - TAHUN PELAJARAN 2025/2026</p>
+    </div>
+
+    <div id="start-page">
+        <div class="basmalah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+        <div class="input-group">
+            <label>Nama Lengkap</label>
+            <input type="text" id="nama-siswa" placeholder="Masukkan nama Anda">
+        </div>
+        <div class="input-group">
+            <label>Kelas</label>
+            <select id="kelas-siswa">
+                <option value="">-- Pilih Kelas --</option>
+                <option value="X-A">X-A</option><option value="X-B">X-B</option>
+                <option value="X-C">X-C</option><option value="X-D">X-D</option>
+                <option value="X-E">X-E</option>
+            </select>
+        </div>
+        <div class="warning-box">
+            ⚠️ <b>KEAMANAN UJIAN:</b><br>
+            Sistem mendeteksi pindah tab, screenshot, dan klik kanan.
+            <hr>
+            <input type="checkbox" id="pakta"> <label for="pakta" style="cursor:pointer">Saya menyatakan jujur dalam mengerjakan.</label>
+        </div>
+        <button type="button" class="btn-utama" onclick="mulaiUjian()">MULAI UJIAN</button>
+    </div>
+
+    <div id="exam-page">
+        <div class="identitas-header">
+            <div id="display-info">Peserta: -</div>
+            <div class="timer">⏳ <span id="time">01:30:00</span></div>
+        </div>
+
+        <div id="questions-container">
+            <div class="question" id="q-block-1">
+                <p>1. Himpunan penyelesaian dari sistem persamaan linear berikut ini adalah {a,b,c}. Hasil kali dari a,b,c adalah...</p>
+                $$ \begin{cases}a+4b-c=1\\ -a+2b+c=2\\ 2a+6b+c=-8\end{cases} $$
+                <input type="number" id="ans1" class="save-input" placeholder="Jawaban angka">
+            </div>
+
+            <div class="question" id="q-block-2">
+                <p>2. Gambarkan grafik dan tunjukkan daerah penyelesaian dari sistem pertidaksamaan linear dua variable berikut ini.</p>
+                $$ \begin{cases}4x+5y\ge20\\ x+6y\le12\end{cases} $$
+                <div class="upload-section">
+                    <input type="file" id="file2" accept="image/*" class="file-input">
+                    <p style="font-size: 12px; color: #666;">*Wajib upload foto grafik</p>
+                </div>
+            </div>
+
+            <div class="question" id="q-block-3">
+                <p>3. Tuliskan sistem pertidaksamaan linear yang memiliki daerah penyelesaian (arsiran hitam) seperti pada gambar di bawah ini.</p>
+                <div style="text-align: center; margin: 15px 0;">
+                    <canvas id="canvasSoal3" width="400" height="350"></canvas>
+                </div>
+                <div class="input-group">
+                    <label>Jawaban Sistem Pertidaksamaan:</label>
+                    <input type="text" id="ans3" class="save-input" placeholder="Contoh: 2x + y <= 30; x + 2y >= 24">
+                </div>
+            </div>
+
+            <div class="question">
+                <p>4. Sebuah pabrik lensa memiliki 3 buah mesin, yaitu A, B, dan C. Jika ketiga mesin bekerja, maka 5.700 lensa dapat dihasilkan dalam satu minggu. Jika hanya mesin A dan B yang bekerja, maka 3.400 lensa dapat dihasilkan dalam satu minggu. Jika hanya mesin A dan C yang bekerja, maka 4.200 lensa dapat dihasilkan dalam satu minggu. Banyak lensa yang dihasilkan tiap-tiap mesin dalam satu minggu adalah...</p>
+                <input type="text" id="ans4" class="save-input" placeholder="A=..., B=..., C=...">
+                <div class="upload-section">
+                    <input type="file" id="file4" accept="image/*">
+                    <p style="font-size: 12px; color: #666;">*Wajib upload foto cara pengerjaan</p>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>5. Seorang penjahit memiliki persediaan 20 m kain polos dan 15 m kain bergaris untuk membuat 2 jenis pakaian. Outer memerlukan 1 m kain polos dan 3 m kain bergaris. Kemeja memerlukan 2 m kain polos dan 1 m kain bergaris. Outer dijual dengan harga Rp 150.000,- per potong dan Kemeja dijual dengan harga Rp 100.000,- per potong. Penghasilan maksimum yang dapat diperoleh penjahit tersebut adalah...</p>
+                <input type="number" id="ans5" class="save-input" placeholder="Hasil akhir angka">
+                <div class="upload-section">
+                    <input type="file" id="file5" accept="image/*">
+                    <p style="font-size: 12px; color: #666;">*Wajib upload foto cara pengerjaan</p>
+                </div>
+            </div>
+
+            <button type="button" class="btn-utama" onclick="validasiKirim()">KIRIM JAWABAN</button>
+        </div>
+    </div>
+
+    <div id="result-area">
+        <h2 style="color: #1a5d1a;">Alhamdulillah, Selesai!</h2>
+        <div id="status-display" style="padding:20px; background:#f8f9fa; border-radius:10px; margin-bottom:20px; text-align: left;"></div>
+        
+        <div class="blue-box">
+            <b>Catatan:</b> Skor akhir diperoleh setelah dikoreksi secara manual oleh guru.
+        </div>
+        
+        <button type="button" class="btn-utama" onclick="location.reload()">Tutup Halaman</button>
+    </div>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyKuyhIxH58sn8GKeji8a-8CR8aiUm1YGwOIIBjhdAM-9kPYTu7XJF8xBz3ZZ1Rk5i1Gg/exec'; 
+    const DURASI_DETIK = 5400; 
+
+    let timerAktif = false;
+    let intervalTimer;
+    let jumlahPelanggaran = parseInt(localStorage.getItem('pelanggaran_count')) || 0;
+    let logPelanggaran = localStorage.getItem('pelanggaran_log') || "";
+    let deviceID = localStorage.getItem('student_device_id') || ('DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase());
+    localStorage.setItem('student_device_id', deviceID);
+
+    window.onload = () => {
+        /* --- TAMBAHAN BARU: Cek apakah sudah pernah submit di perangkat ini --- */
+        if (localStorage.getItem('exam_submitted') === 'true') {
+            tampilkanSudahSubmit();
+            return;
+        }
+
+        if (localStorage.getItem('exam_active') === 'true') {
+            document.getElementById('nama-siswa').value = localStorage.getItem('siswa_nama');
+            document.getElementById('kelas-siswa').value = localStorage.getItem('siswa_kelas');
+            document.getElementById('pakta').checked = true;
+            mulaiUjian(true); 
+        }
+
+        document.querySelectorAll('.save-input').forEach(input => {
+            input.value = localStorage.getItem('save_' + input.id) || "";
+            input.addEventListener('input', (e) => {
+                localStorage.setItem('save_' + e.target.id, e.target.value);
+                e.target.closest('.question').classList.remove('invalid-question');
+            });
+        });
+
+        document.querySelectorAll('.file-input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                if(e.target.files.length > 0) e.target.closest('.question').classList.remove('invalid-question');
+            });
+        });
+
+        gambarGrafikSoal3();
+    };
+
+    /* --- TAMBAHAN BARU: Tampilan jika akses ditolak --- */
+    function tampilkanSudahSubmit() {
+        document.getElementById('start-page').innerHTML = `
+            <div class="warning-box" style="color: #c53030; background: #fff5f5; border-color: #feb2b2;">
+                <h2 style="margin-top:0;">AKSES DITOLAK</h2>
+                <p>Sistem mendeteksi Anda telah mengirimkan jawaban sebelumnya.</p>
+                <p>Satu siswa hanya diperbolehkan melakukan submit sebanyak 1 kali per perangkat/akun.</p>
+            </div>
+            <button class="btn-utama" onclick="location.reload()">Refresh Halaman</button>
+        `;
+    }
+
+    function proteksiLayar() {
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'PrintScreen' || e.keyCode === 44) {
+                navigator.clipboard.writeText("");
+                alert("Screenshot dilarang!");
+                catatPelanggaran("Screenshot");
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && (e.key === 'p' || e.key === 's' || e.key === 'u' || e.key === 'Shift')) {
+                e.preventDefault();
+            }
+        });
+        const wm = document.getElementById('watermark');
+        const nama = localStorage.getItem('siswa_nama') || "PESERTA";
+        wm.style.display = 'flex';
+        wm.innerHTML = Array(60).fill(`<span>${nama}</span>`).join("");
+    }
+
+    function gambarGrafikSoal3() {
+        const canvas = document.getElementById('canvasSoal3');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const offsetX = 50, originY = 300, skalaX = 10, skalaY = 8;
+        ctx.beginPath(); ctx.fillStyle = "black";
+        ctx.moveTo(offsetX, originY - (12 * skalaY)); ctx.lineTo(offsetX, originY - (30 * skalaY));
+        ctx.lineTo(offsetX + (12 * skalaX), originY - (6 * skalaY)); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.strokeStyle = "black"; ctx.lineWidth = 2;
+        ctx.moveTo(offsetX, originY + 20); ctx.lineTo(offsetX, originY - 260);
+        ctx.moveTo(offsetX - 20, originY); ctx.lineTo(offsetX + 300, originY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(offsetX, originY - (30 * skalaY)); ctx.lineTo(offsetX + (15 * skalaX), originY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(offsetX, originY - (12 * skalaY)); ctx.lineTo(offsetX + (24 * skalaX), originY); ctx.stroke();
+        ctx.font = "14px Arial"; ctx.fillText("30", offsetX - 25, originY - (30 * skalaY) + 5);
+        ctx.fillText("12", offsetX - 25, originY - (12 * skalaY) + 5);
+        ctx.fillText("15", offsetX + (15 * skalaX) - 5, originY + 20);
+        ctx.fillText("24", offsetX + (24 * skalaX) - 5, originY + 20);
+    }
+
+    function mulaiUjian(isResume = false) {
+        const nama = document.getElementById('nama-siswa').value.trim();
+        const kelas = document.getElementById('kelas-siswa').value;
+        if (!nama || !kelas || !document.getElementById('pakta').checked) {
+            alert("Lengkapi identitas!"); return;
+        }
+
+        if (!isResume) {
+            localStorage.setItem('exam_active', 'true');
+            localStorage.setItem('siswa_nama', nama);
+            localStorage.setItem('siswa_kelas', kelas);
+            localStorage.setItem('exam_start_time', Math.floor(Date.now() / 1000));
+        }
+
+        const startTime = parseInt(localStorage.getItem('exam_start_time'));
+        const sekarang = Math.floor(Date.now() / 1000);
+        if (sekarang - startTime >= DURASI_DETIK) {
+            alert("Waktu sudah habis!");
+            kirimData();
+            return;
+        }
+
+        document.getElementById('display-info').innerText = `Peserta: ${nama} (${kelas})`;
+        document.getElementById('start-page').style.display = 'none';
+        document.getElementById('exam-page').style.display = 'block';
+        
+        timerAktif = true;
+        proteksiLayar();
+        jalankanTimer(startTime);
+    }
+
+    function jalankanTimer(startTime) {
+        const timerDisplay = document.getElementById('time');
+        if(intervalTimer) clearInterval(intervalTimer);
+        
+        intervalTimer = setInterval(() => {
+            if (!timerAktif) { clearInterval(intervalTimer); return; }
+
+            const sekarang = Math.floor(Date.now() / 1000);
+            const selisih = sekarang - startTime;
+            let sisa = DURASI_DETIK - selisih;
+
+            if (sisa <= 0) {
+                timerAktif = false;
+                timerDisplay.innerText = "00:00:00";
+                alert("Waktu Habis! Jawaban akan dikirim otomatis.");
+                kirimData();
+                return;
+            }
+
+            let h = Math.floor(sisa / 3600), m = Math.floor((sisa % 3600) / 60), s = sisa % 60;
+            timerDisplay.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        }, 1000);
+    }
+
+    function catatPelanggaran(jenis) {
+        if (!timerAktif) return;
+        jumlahPelanggaran++;
+        logPelanggaran += `${new Date().toLocaleTimeString()}(${jenis}), `;
+        localStorage.setItem('pelanggaran_count', jumlahPelanggaran);
+        localStorage.setItem('pelanggaran_log', logPelanggaran);
+        alert(`⚠️ PELANGGARAN!\nJangan keluar dari halaman atau screenshot.`);
+    }
+
+    document.addEventListener("visibilitychange", () => { 
+        if (document.hidden && timerAktif) catatPelanggaran("Tab"); 
+    });
+
+    async function kompresGambar(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image(); img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height, MAX = 800;
+                    if (w > MAX) { h *= MAX/w; w = MAX; }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7));
+                };
+            };
+        });
+    }
+
+    async function kirimData() {
+        timerAktif = false;
+        document.getElementById('loading-overlay').style.display = 'block';
+        try {
+            const params = new URLSearchParams();
+            params.append('nama', localStorage.getItem('siswa_nama'));
+            params.append('kelas', localStorage.getItem('siswa_kelas'));
+            params.append('ans1', document.getElementById('ans1').value);
+            params.append('ans3', document.getElementById('ans3').value);
+            params.append('ans4', document.getElementById('ans4').value);
+            params.append('ans5', document.getElementById('ans5').value);
+            params.append('pelanggaran', jumlahPelanggaran);
+            params.append('logPelanggaran', logPelanggaran);
+            params.append('deviceID', deviceID);
+
+            const f2 = document.getElementById('file2').files[0];
+            const f4 = document.getElementById('file4').files[0];
+            const f5 = document.getElementById('file5').files[0];
+            
+            if(f2) params.append('file2Data', await kompresGambar(f2));
+            if(f4) params.append('file4Data', await kompresGambar(f4));
+            if(f5) params.append('file5Data', await kompresGambar(f5));
+
+            const resp = await fetch(scriptURL, { method: 'POST', body: params });
+            const result = await resp.text();
+            
+            /* --- TAMBAHAN BARU: Logika penanganan respon dari server --- */
+            if (result === "Success") {
+                localStorage.setItem('exam_submitted', 'true'); // Kunci perangkat
+                localStorage.removeItem('exam_active');
+                localStorage.removeItem('siswa_nama');
+                document.getElementById('loading-overlay').style.display = 'none';
+                tampilkanHasil();
+            } else if (result.includes("Error")) {
+                alert(result); // Tampilkan pesan "Nama sudah ada" dari Apps Script
+                document.getElementById('loading-overlay').style.display = 'none';
+                timerAktif = true;
+            } else { throw new Error(); }
+        } catch (e) { 
+            document.getElementById('loading-overlay').style.display = 'none';
+            alert("Koneksi bermasalah! Silakan coba klik KIRIM lagi."); 
+            timerAktif = true;
+        }
+    }
+
+    function validasiKirim() {
+        let isValid = true;
+        document.querySelectorAll('.question').forEach(q => q.classList.remove('invalid-question'));
+        
+        const inputs = [
+            {id: 'ans1'}, {id: 'file2', isFile: true}, {id: 'ans3'},
+            {id: 'ans4'}, {id: 'file4', isFile: true},
+            {id: 'ans5'}, {id: 'file5', isFile: true}
+        ];
+
+        inputs.forEach(item => {
+            const el = document.getElementById(item.id);
+            if (!el) return;
+            const empty = item.isFile ? el.files.length === 0 : !el.value;
+            if (empty) {
+                el.closest('.question').classList.add('invalid-question');
+                isValid = false;
+            }
+        });
+
+        if (!isValid) { 
+            alert("Jawaban atau Foto belum lengkap!"); 
+            return; 
+        }
+        
+        if (confirm("Apakah Anda yakin ingin mengirim jawaban sekarang?")) {
+            kirimData();
+        }
+    }
+
+    function tampilkanHasil() {
+        document.getElementById('exam-page').style.display = 'none';
+        document.getElementById('watermark').style.display = 'none';
+        document.getElementById('result-area').style.display = 'block';
+        const penalti = jumlahPelanggaran * 10;
+        document.getElementById('status-display').innerHTML = `
+            <p style="font-weight:bold; color:#1a5d1a; font-size:18px;">Jawaban Berhasil Terkirim.</p>
+            <div style="background:#fff5f5; padding:15px; border-radius:8px; border:1px solid #feb2b2;">
+                <p style="margin:0; color:#c53030;"><b>Laporan Pelanggaran:</b></p>
+                <ul style="margin:10px 0;">
+                    <li>Total Pelanggaran: ${jumlahPelanggaran} kali</li>
+                    <li><b>Pengurangan Skor</b>: -${penalti}</li>
+                </ul>
+            </div>
+        `;
+    }
+</script>
+</body>
+</html>
